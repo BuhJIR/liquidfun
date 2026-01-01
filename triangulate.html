@@ -1,0 +1,128 @@
+
+<html>
+
+<head>
+		<title>PolyK</title>
+		
+		<script type="text/javascript" src="//lib.ivank.net/ivank.js"></script>
+		<script type="text/javascript" src="//polyk.ivank.net/polyk.js"></script>
+		
+		<script type="text/javascript">
+		
+			var stage, s, dragged;
+			var poly = [93, 195, 129, 92, 280, 81, 402, 134, 477, 70, 619, 61, 759, 97, 758, 247, 662, 347, 665, 230, 721, 140, 607, 117, 472, 171, 580, 178, 603, 257, 605, 377, 690, 404, 787, 328, 786, 480, 617, 510, 611, 439, 544, 400, 529, 291, 509, 218, 400, 358, 489, 402, 425, 479, 268, 464, 341, 338, 393, 427, 373, 284, 429, 197, 301, 150, 296, 245, 252, 384, 118, 360, 190, 272, 244, 165, 81, 259, 40, 216];
+			var dots = [];
+			
+			function Go()
+			{
+				stage = new Stage("c");
+				s = new Sprite();
+				stage.addChild(s);
+				
+				for(var i=0; i<poly.length/2; i++)
+				{
+					var dot = new Dot();
+					dot.x = poly[2*i];
+					dot.y = poly[2*i+1];
+					dots.push(dot);
+					dot.addEventListener(MouseEvent.MOUSE_DOWN, onMD);
+					stage.addChild(dot);
+				}
+				stage.addEventListener(MouseEvent.MOUSE_MOVE, onMM);
+				stage.addEventListener(MouseEvent.MOUSE_UP, onMU);
+				redraw();
+			}
+			
+			function onMD(e){dragged = e.target;}
+			function onMU(e){dragged = null;    }
+			function onMM(e)
+			{
+				if(dragged != null)
+				{
+					dragged.x = stage.mouseX;  dragged.y = stage.mouseY;
+					var i = dots.indexOf(dragged);
+					poly[2*i] = stage.mouseX;
+					poly[2*i+1] = stage.mouseY;
+					redraw();
+				}
+				//s.alpha = PolyK.ContainsPoint(poly, stage.mouseX, stage.mouseY)?0.2:1;
+			}
+			
+			function redraw()
+			{
+				s.graphics.clear();
+				fillPoly(poly, s, 0x00bbff);
+				var tgs = PolyK.Triangulate(poly);
+				drawTgs(poly, tgs, s);
+			}
+
+			
+			function strokePoly(poly, s)
+			{
+				var n = poly.length>>1;
+				s.graphics.lineStyle(6, 0xff0000);
+				s.graphics.moveTo(poly[0], poly[1]);
+				for(var i=1; i<n; i++) s.graphics.lineTo(poly[2*i], poly[2*i+1]);
+				s.graphics.lineTo(poly[0], poly[1]);
+			}
+			
+			function fillPoly(poly, s, color)
+			{
+				var tgs = PolyK.Triangulate(poly);
+				s.graphics.beginFill(color);
+				s.graphics.drawTriangles(poly, tgs);
+				s.graphics.endFill();
+			}
+			
+			function drawTgs(vrt, ind, s)
+			{
+				var n = ind.length/3;
+				
+				s.graphics.lineStyle(2, 0x000000);
+				
+				for(var i=0; i<n; i++)
+				{
+					var i0 = ind[3*i  ];
+					var i1 = ind[3*i+1];
+					var i2 = ind[3*i+2]
+					s.graphics.moveTo(vrt[2*i0], vrt[2*i0+1]);
+					s.graphics.lineTo(vrt[2*i1], vrt[2*i1+1]);
+					s.graphics.moveTo(vrt[2*i1], vrt[2*i1+1]);
+					s.graphics.lineTo(vrt[2*i2], vrt[2*i2+1]);
+					s.graphics.moveTo(vrt[2*i2], vrt[2*i2+1]);
+					s.graphics.lineTo(vrt[2*i0], vrt[2*i0+1]);
+				}
+				
+			}
+			
+			function hash(a)
+			{
+				a = (a ^ 61) ^ (a >> 16);
+				a = a + (a << 3);
+				a = a ^ (a >> 4);
+				a = a * 0x27d4eb2d;
+				a = a ^ (a >> 15);
+				return a;
+			}
+			
+			function Dot()
+			{
+				Sprite.apply(this);  // inherits from Sprite
+				this.graphics.beginFill(0x000000, 0.15);
+				this.graphics.drawCircle(0,0,13);
+				this.graphics.beginFill(0xffffff, 1.0);
+				this.graphics.drawCircle(0,0, 6);	
+				this.buttonMode = true;
+			}
+			Dot.prototype = new Sprite();	
+
+			
+		</script>
+
+	</head>
+
+
+	<body onload="Go();">
+		<canvas id="c"></canvas>
+	</body>
+</html>
